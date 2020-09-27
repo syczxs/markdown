@@ -1,0 +1,38 @@
+.TabList{
+    width: 100%;
+    min-height: 60px;
+    display: flex;
+    flex-wrap: wrap;
+}
+.list-item{
+    height: 60px;
+    border: 1px black solid;
+    
+}
+.active {
+    background-color: red;
+    
+}
+.close{
+    visibility: hidden;
+}
+.active .close{
+    visibility: visible;
+
+}
+.list-item:hover .close{
+    visibility: visible;
+}
+.withUnsaved .close{
+    display: none;
+}
+.withUnsaved:hover  .close{
+    display: inline-block;
+}
+.withUnsaved:hover .unasve{
+    display: none;
+    
+
+}
+
+

@@ -1,0 +1,16 @@
+.box1{
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    
+}
+.box2{
+    width:100%;
+    display: flex;
+    justify-content: space-around;
+}
+.input{
+    padding-left: 10px;
+
+}
