@@ -62,6 +62,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                             <>
                                 <span
                                     onClick={() => { onFileClick(file.id) }}>{file.title}</span>
+                               
                                 <button
                                     onClick={() => { setEditStatus(file.id); setValue(file.title) }}>编辑</button>
                                 <button
@@ -75,6 +76,8 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                                     placeholder="请输入文件名称"
                                     onChange={(e) => { setValue(e.target.value) }}
                                 ></input>
+                                {file.sameName &&
+                                <span>已有相同文件</span>}
                                 <button type="button"
                                     onClick={()=>{closeSearch(file)}}>关闭</button>
                             </>

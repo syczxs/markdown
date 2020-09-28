@@ -10,7 +10,6 @@ import "easymde/dist/easymde.min.css"
 import uuidv4 from 'uuid/v4'
 
 //js文件引用
-import defaultFiles from './utils/defaultFiles'
 import { flattenArr, objToArr } from './utils/helper'
 import fileHelper from './utils/fileHelper'
 
@@ -36,8 +35,8 @@ const fileStore = new Store({ 'name': 'Files Data' })
 const saveFilesToStore = (files) => {
   //数组方便处理
   const filesStoreObj = objToArr(files).reduce((result, file) => {
-    const { id, path, title, createdAt}=file
-    result[id]={
+    const { id, path, title, createdAt } = file
+    result[id] = {
       id,
       path,
       title,
@@ -46,7 +45,7 @@ const saveFilesToStore = (files) => {
     return result
   }, {})
 
-  fileStore.set('files',fileStore)
+  fileStore.set('files', filesStoreObj)
 
 }
 
@@ -54,7 +53,7 @@ const saveFilesToStore = (files) => {
 function App() {
 
   //文件数组
-  const [files, setFiles] = useState(fileStore.get('files')  || {})
+  const [files, setFiles] = useState(fileStore.get('files') || {})
   console.log(files)
   //当前被激活文件
   const [activeFileID, setActiveFileID] = useState("")
@@ -91,9 +90,16 @@ function App() {
     //设置选择窗口ID
     setActiveFileID(fileID)
     //打开文件内容
-    const currentFile =files(fileID)
-    const(!currentFile.isLoaded){
-      
+    const currentFile = files[fileID]
+    if (!currentFile.isLoaded) {
+      fileHelper.readFile(currentFile.path).then(value => {
+        const newFile = { ...files[fileID], body: value, isLoaded: true }
+        setFiles({ ...files, [fileID]: newFile })
+      }).catch(err => {
+        const newFile = { ...files[fileID], isLoaded: true, err: true }
+        setFiles({ ...files, [fileID]: newFile })
+      })
+
     }
 
     //不可重复加入
@@ -119,12 +125,7 @@ function App() {
   }
   //修改文本
   const fileChange = (id, value) => {
-    // const newFiles=files.map(file=>{
-    //   if(file.id===id){
-    //     file.body=value
-    //   }
-    //   return file
-    // })
+
     const newFile = { ...files[id], body: value }
     setFiles({ ...files, [id]: newFile })
 
@@ -136,26 +137,39 @@ function App() {
 
   //删除文件回调
   const deleteFile = (id) => {
-    // const newFiles=files.filter(file=>file.id!==id)
-    fileHelper.deleteFile(files[id].path).then(() => {
-      delete files[id]
-      setFiles(files)
-      saveFilesToStore(files)
-      //关闭右侧窗口
-      tabClose(id)
-    })
+    //新建文件时点esc bug解决
+    if (files[id].isNew) {
+      const { [id]: value, ...afterDelete } = files
+      setFiles(afterDelete)
+    } else {
+      fileHelper.deleteFile(files[id].path).then(() => {
+        const { [id]: value, ...afterDelete } = files
+        setFiles(afterDelete)
+        saveFilesToStore(afterDelete)
+        //关闭右侧窗口
+        tabClose(id)
+      })
+
+    }
+
 
   }
   //修改文件名回调
   const updataFileName = (id, title, isNew) => {
-    const newPath=join(savedLocation, `${title}.md`)
-    const modifiedFile = { ...files[id], title, isNew: false,path:newPath }
-    const newFiles={ ...files, [id]: modifiedFile }
+    const newPath = join(savedLocation, `${title}.md`)
+    const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
+    const newFiles = { ...files, [id]: modifiedFile }
     if (isNew) {
-      fileHelper.writeFile(newPath, files[id].body).then(() => {
-        setFiles(newFiles)
-        saveFilesToStore(newFiles)
-      })
+      const sameTitle = filesArr.filter(item => item.title == title)
+      if (sameTitle.length > 0) {
+        const sameNameFile = { ...files[id], title, isNew: true, path: newPath, sameName: true }
+        setFiles({ ...files, [id]: sameNameFile })
+      } else {
+        fileHelper.writeFile(newPath, files[id].body).then(() => {
+          setFiles(newFiles)
+          saveFilesToStore(newFiles)
+        })
+      }
     } else {
       fileHelper.renameFile(join(savedLocation, `${files[id].title}.md`),
         newPath).then(() => {
@@ -169,26 +183,21 @@ function App() {
   }
   //根据文件名查找onFileSearch
   const fileSearch = (keyword) => {
-    // console.log(keyword)
+    if(!!keyword){
     // filter out the new files based on the keyword
     const newFiles = filesArr.filter(file => file.title.includes(keyword))
-    // console.log(newFiles)
     setSearchedFiles(newFiles)
+
+    }else{
+      setSearchedFiles({})
+    }
+    
   }
 
   //新建文件
   const createNewFile = () => {
     const newID = uuidv4()
-    // const newFiles=[
-    //   ...files,
-    //   {
-    //     id:newID,
-    //     title:"",
-    //     body:'请输入内容',
-    //     createdAt:new Date().getTime(),
-    //     isNew:true
-    //   }
-    // ]
+
     const newFile = {
       id: newID,
       title: "",
@@ -206,6 +215,15 @@ function App() {
         setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id
         ))
       })
+  }
+  //删除不存在文件
+  const deleteErrFile = (id) => {
+    const { [id]: value, ...afterDelete } = files
+    setFiles(afterDelete)
+    saveFilesToStore(afterDelete)
+    //关闭右侧窗口
+    tabClose(id)
+
   }
 
 
@@ -240,7 +258,7 @@ function App() {
         </div>
         <div className="body-right">
           {
-            !activeFile && <div className="">未打开文件</div>
+            !activeFile && <div >未打开文件</div>
           }{
             activeFile &&
             <>
@@ -251,14 +269,26 @@ function App() {
                 onTabClick={tabClick}
                 onCloseTab={tabClose}
               ></TabList>
-              <SimpleMDE
-                key={activeFile && activeFile.id}
-                value={activeFile && activeFile.body}
-                onChange={(value) => { fileChange(activeFile.id, value) }}
-                options={{
-                  minHeight: '456px'
-                }}></SimpleMDE>
-              <button onClick={saveCurrentFile}>保存</button>
+              {activeFile.err &&
+                <>
+                  <div>文件不存在</div>
+                  <button onClick={() => { deleteErrFile(activeFile.id) }}>确定</button>
+                </>
+              }{
+                !activeFile.err &&
+                <>
+                  <SimpleMDE
+                    key={activeFile && activeFile.id}
+                    value={activeFile && activeFile.body}
+                    onChange={(value) => { fileChange(activeFile.id, value) }}
+                    options={{
+                      minHeight: '456px'
+                    }}></SimpleMDE>
+                  <button onClick={saveCurrentFile}>保存</button>
+                </>
+              }
+
+
             </>
           }
         </div>
