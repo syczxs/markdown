@@ -26,7 +26,7 @@ import ButtonBtn from './components/buttonBtn/ButtonBtn'
 import TabList from './components/tabList/TabList'
 
 //使用node
-const { join } = window.require('path')
+const { join, basename, extname ,dirname} = window.require('path')
 const { remote } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ 'name': 'Files Data' })
@@ -156,7 +156,7 @@ function App() {
   }
   //修改文件名回调
   const updataFileName = (id, title, isNew) => {
-    const newPath = join(savedLocation, `${title}.md`)
+    const newPath =isNew? join(savedLocation, `${title}.md`) : join(dirname(files[id].path),`${title}.md`)
     const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
     const newFiles = { ...files, [id]: modifiedFile }
     if (isNew) {
@@ -171,8 +171,8 @@ function App() {
         })
       }
     } else {
-      fileHelper.renameFile(join(savedLocation, `${files[id].title}.md`),
-        newPath).then(() => {
+      
+      fileHelper.renameFile(files[id].path,newPath).then(() => {
           setFiles(newFiles)
           saveFilesToStore(newFiles)
         })
@@ -183,15 +183,15 @@ function App() {
   }
   //根据文件名查找onFileSearch
   const fileSearch = (keyword) => {
-    if(!!keyword){
-    // filter out the new files based on the keyword
-    const newFiles = filesArr.filter(file => file.title.includes(keyword))
-    setSearchedFiles(newFiles)
+    if (!!keyword) {
+      // filter out the new files based on the keyword
+      const newFiles = filesArr.filter(file => file.title.includes(keyword))
+      setSearchedFiles(newFiles)
 
-    }else{
+    } else {
       setSearchedFiles({})
     }
-    
+
   }
 
   //新建文件
@@ -210,7 +210,7 @@ function App() {
   }
   //保存文件
   const saveCurrentFile = () => {
-    fileHelper.writeFile(join(savedLocation, `${activeFile.title}.md`),
+    fileHelper.writeFile(activeFile.path,
       activeFile.body).then(() => {
         setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id
         ))
@@ -224,6 +224,47 @@ function App() {
     //关闭右侧窗口
     tabClose(id)
 
+  }
+  //导入文件
+  const importFiles = () => {
+    remote.dialog.showOpenDialog({
+      title: "选择导入文件",
+      properties: ['openFile', 'multiSelections'],
+      filters: [
+        { name: 'Markdown files', extensions: ['md'] }
+      ]
+    }, (paths) => {
+      if (Array.isArray(paths)) {
+        //过滤（已有文件）数组
+        const filteredPaths = paths.filter(path => {
+          const alreadyAdded = Object.values(files).find(file => {
+            return file.path == path
+
+          })
+          console.log(!alreadyAdded, alreadyAdded)
+          return !alreadyAdded
+        })
+        //文件进行扩展
+        const importFilesArr = filteredPaths.map(path => {
+          return {
+            id: uuidv4(),
+            title: basename(path, extname(path)),
+            path
+          }
+        })
+        const newFiles = { ...files, ...flattenArr(importFilesArr) }
+        setFiles(newFiles)
+        saveFilesToStore(newFiles)
+        if (importFilesArr.length > 0) {
+          remote.dialog.showMessageBox({
+            type: 'info',
+            title: `成功导入${importFilesArr.length}个文件`,
+            message: `成功导入${importFilesArr.length}个文件`,
+          })
+        }
+
+      }
+    })
   }
 
 
@@ -251,7 +292,7 @@ function App() {
             <div className="footer-item">
               <ButtonBtn
                 text="导入 "
-                onBtnClick={(e) => { console.log(encodeURIComponent) }}
+                onBtnClick={importFiles}
               ></ButtonBtn>
             </div>
           </div>
