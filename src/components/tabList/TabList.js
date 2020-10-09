@@ -21,7 +21,6 @@ const TabList = ({ files, activeId, unsaveIds, onTabClick, onCloseTab }) => {
                             key={file.id}
                             onClick={(e) => { e.preventDefault(); onTabClick(file.id) }}>
                             <span>{file.title}</span>
-                            <span>{file.id}</span>
                             <span className="close"
                                 onClick={(e) => { e.stopPropagation(); onCloseTab(file.id) }}>关闭</span>
                             {

@@ -91,6 +91,7 @@ function App() {
     setActiveFileID(fileID)
     //打开文件内容
     const currentFile = files[fileID]
+    console.log(currentFile)
     if (!currentFile.isLoaded) {
       fileHelper.readFile(currentFile.path).then(value => {
         const newFile = { ...files[fileID], body: value, isLoaded: true }
