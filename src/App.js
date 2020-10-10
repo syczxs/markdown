@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import './App.css';
 // import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -25,9 +25,13 @@ import ButtonBtn from './components/buttonBtn/ButtonBtn'
 //4右侧上部利表
 import TabList from './components/tabList/TabList'
 
+
+//hook
+import useIpcRenderer from './hooks/useIpcRenderer'
+
 //使用node
 const { join, basename, extname ,dirname} = window.require('path')
-const { remote } = window.require('electron')
+const { remote,ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ 'name': 'Files Data' })
 
@@ -126,14 +130,18 @@ function App() {
   }
   //修改文本
   const fileChange = (id, value) => {
-
-    const newFile = { ...files[id], body: value }
+    if(value!==files[id].body){
+      const newFile = { ...files[id], body: value }
     setFiles({ ...files, [id]: newFile })
 
     //更新未保存文件ID
     if (!unsavedFileIDs.includes(id)) {
       setUnsavedFileIDs([...unsavedFileIDs, id])
     }
+
+    }
+
+    
   }
 
   //删除文件回调
@@ -268,6 +276,12 @@ function App() {
     })
   }
 
+  useIpcRenderer({
+    'create-new-file':createNewFile,
+    'import-file':importFiles,
+    'save-edit-file':saveCurrentFile
+  })
+
 
   return (
     <div className="App">
@@ -326,7 +340,7 @@ function App() {
                     options={{
                       minHeight: '456px'
                     }}></SimpleMDE>
-                  <button onClick={saveCurrentFile}>保存</button>
+                
                 </>
               }
 
