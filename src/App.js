@@ -34,6 +34,7 @@ const { join, basename, extname ,dirname} = window.require('path')
 const { remote,ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ 'name': 'Files Data' })
+const settingsStore=new Store({name:'Settings'})
 
 //文件保存
 const saveFilesToStore = (files) => {
@@ -69,7 +70,7 @@ function App() {
   const [searchedFiles, setSearchedFiles] = useState([])
 
   //electron中获取目录，document默认为电脑文档下
-  const savedLocation = remote.app.getPath('documents')
+  const savedLocation =settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
 
   //转回数组
   const filesArr = objToArr(files)
