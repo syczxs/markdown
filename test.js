@@ -1,5 +1,5 @@
 // const qiniu = require('qiniu')
-const QiniuManager =require ('./src/utils/QiniuManager')
+const QiniuManager = require('./src/utils/QiniuManager')
 
 //key
 var accessKey = 'Q29WiScCAugEH7vz8kFfuj1aJussqP98joDF2ePH';
@@ -13,9 +13,22 @@ var localFile = "C:/Users/麦律/Desktop/11.md";
 
 var key = '11.md';
 
-const  manager=new QiniuManager(accessKey,secretKey,'syc-markdown')
-// manager.uploadFile(key,localFile)
-manager.deletFile(key)
+const manager = new QiniuManager(accessKey, secretKey, 'syc-markdown')
+// manager.uploadFile(key,localFile).then(res=>{
+//     console.log('上传成功过',res)
+//     return manager.deletFile(key)
+// }).then(res=>{
+//     console.log("删除成功",res)
+// })
+// manager.deletFile(key)
+
+manager.generateDownloadLink(key).then(res => {
+    console.log(res)
+    return manager.generateDownloadLink('first.md')
+}).then(res => {
+    console.log(res)
+})
+
 
 
 
