@@ -1,5 +1,10 @@
-const { app, shell,ipcMain } = require('electron')
+const { app, shell, ipcMain } = require('electron')
+const Store = require('electron-store')
+const settingsStore = new Store({ name: 'Settings'})
 
+const qiniuIsConfiged =  ['accessKey', 'secretKey', 'bucketName'].every(key => !!settingsStore.get(key))
+//自动同步
+let enableAutoSync = settingsStore.get('enableAutoSync')
 let template = [{
   label: '文件',
   submenu: [{
@@ -59,6 +64,35 @@ let template = [{
       role: 'selectall'
     }
   ]
+},
+{
+  label: '云同步',
+  submenu: [{
+    label: '设置',
+    accelerator: 'CmdOrCtrl+,',
+    click: () => {
+      ipcMain.emit('open-settings-window')
+    }
+  }, {
+    label: '自动同步',
+    type: 'checkbox',
+    enabled: qiniuIsConfiged,
+    checked: enableAutoSync,
+    click: () => {
+      settingsStore.set('enableAutoSync', !enableAutoSync)
+    }
+  }, {
+    label: '全部同步至云端',
+    enabled: qiniuIsConfiged,
+    click: () => {
+    }
+  }, {
+    label: '从云端下载到本地',
+    enabled: qiniuIsConfiged,
+    click: () => {
+      
+    }
+  }]
 },
 {
   label: '视图',
@@ -138,7 +172,6 @@ if (process.platform === 'darwin') {
       accelerator: 'Command+,',
       click: () => {
         ipcMain.emit('open-settings-window')
-        
       }
     }, {
       label: '服务',
@@ -167,13 +200,12 @@ if (process.platform === 'darwin') {
       }
     }]
   })
-}else{
+} else {
   template[0].submenu.push({
     label: '设置',
     accelerator: 'Ctrl+,',
     click: () => {
       ipcMain.emit('open-settings-window')
-      
     }
   })
 }

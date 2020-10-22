@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 // import 'bootstrap/dist/css/bootstrap.min.css'
 
@@ -30,11 +30,13 @@ import TabList from './components/tabList/TabList'
 import useIpcRenderer from './hooks/useIpcRenderer'
 
 //使用node
-const { join, basename, extname ,dirname} = window.require('path')
-const { remote,ipcRenderer } = window.require('electron')
+const { join, basename, extname, dirname } = window.require('path')
+const { remote, ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 const fileStore = new Store({ 'name': 'Files Data' })
-const settingsStore=new Store({name:'Settings'})
+const settingsStore = new Store({ name: 'Settings' })
+
+const getAutoSync = () => ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(key => !!settingsStore.get(key))
 
 //文件保存
 const saveFilesToStore = (files) => {
@@ -59,7 +61,7 @@ function App() {
 
   //文件数组
   const [files, setFiles] = useState(fileStore.get('files') || {})
-  console.log(files)
+  
   //当前被激活文件
   const [activeFileID, setActiveFileID] = useState("")
   //打开文件（数组）
@@ -70,11 +72,11 @@ function App() {
   const [searchedFiles, setSearchedFiles] = useState([])
 
   //electron中获取目录，document默认为电脑文档下
-  const savedLocation =settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
+  const savedLocation = settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
 
   //转回数组
   const filesArr = objToArr(files)
-  console.log(filesArr)
+ 
 
 
   //通过openedFileIds筛选files数组
@@ -131,18 +133,18 @@ function App() {
   }
   //修改文本
   const fileChange = (id, value) => {
-    if(value!==files[id].body){
+    if (value !== files[id].body) {
       const newFile = { ...files[id], body: value }
-    setFiles({ ...files, [id]: newFile })
+      setFiles({ ...files, [id]: newFile })
 
-    //更新未保存文件ID
-    if (!unsavedFileIDs.includes(id)) {
-      setUnsavedFileIDs([...unsavedFileIDs, id])
+      //更新未保存文件ID
+      if (!unsavedFileIDs.includes(id)) {
+        setUnsavedFileIDs([...unsavedFileIDs, id])
+      }
+
     }
 
-    }
 
-    
   }
 
   //删除文件回调
@@ -165,9 +167,11 @@ function App() {
 
   }
   //修改文件名回调
-  const updataFileName = (id, title, isNew) => {
-    const newPath =isNew? join(savedLocation, `${title}.md`) : join(dirname(files[id].path),`${title}.md`)
+
+  const updateFileName = (id, title, isNew) => {
+    const newPath = isNew ? join(savedLocation, `${title}.md`) : join(dirname(files[id].path), `${title}.md`)
     const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
+    console.log(newPath,modifiedFile)
     const newFiles = { ...files, [id]: modifiedFile }
     if (isNew) {
       const sameTitle = filesArr.filter(item => item.title == title)
@@ -175,17 +179,21 @@ function App() {
         const sameNameFile = { ...files[id], title, isNew: true, path: newPath, sameName: true }
         setFiles({ ...files, [id]: sameNameFile })
       } else {
+        console.log('开始创建')
         fileHelper.writeFile(newPath, files[id].body).then(() => {
+          console.log(newFiles,"1111")
           setFiles(newFiles)
           saveFilesToStore(newFiles)
+        }).catch(err=>{
+          console.log(err,"123")
         })
       }
     } else {
-      
-      fileHelper.renameFile(files[id].path,newPath).then(() => {
-          setFiles(newFiles)
-          saveFilesToStore(newFiles)
-        })
+      fileHelper.renameFile(files[id].path, newPath).then(() => {
+        console.log('222')
+        setFiles(newFiles)
+        saveFilesToStore(newFiles)
+      })
 
     }
 
@@ -207,7 +215,6 @@ function App() {
   //新建文件
   const createNewFile = () => {
     const newID = uuidv4()
-
     const newFile = {
       id: newID,
       title: "",
@@ -220,11 +227,19 @@ function App() {
   }
   //保存文件
   const saveCurrentFile = () => {
-    fileHelper.writeFile(activeFile.path,
-      activeFile.body).then(() => {
-        setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id
-        ))
-      })
+    const { path, body, title } = activeFile
+    console.log(path, body, title)
+    fileHelper.writeFile(path, body).then(() => {
+      console.log(path, body, title)
+      setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id
+
+      ))
+
+      // if (getAutoSync()) {
+      //   ipcRenderer('upload-file', {key:`${title}.md`,path})
+
+      // }
+    })
   }
   //删除不存在文件
   const deleteErrFile = (id) => {
@@ -278,9 +293,9 @@ function App() {
   }
 
   useIpcRenderer({
-    'create-new-file':createNewFile,
-    'import-file':importFiles,
-    'save-edit-file':saveCurrentFile
+    'create-new-file': createNewFile,
+    'import-file': importFiles,
+    'save-edit-file': saveCurrentFile
   })
 
 
@@ -296,7 +311,7 @@ function App() {
             files={fileListArr}
             onFileClick={fileClick}
             onFileDelete={deleteFile}
-            onSaveEdit={updataFileName}
+            onSaveEdit={updateFileName}
           ></FileList>
           <div className="header-footer">
             <div className="footer-item" >
@@ -341,7 +356,7 @@ function App() {
                     options={{
                       minHeight: '456px'
                     }}></SimpleMDE>
-                
+
                 </>
               }
 
