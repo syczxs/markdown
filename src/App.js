@@ -10,7 +10,7 @@ import "easymde/dist/easymde.min.css"
 import uuidv4 from 'uuid/v4'
 
 //js文件引用
-import { flattenArr, objToArr } from './utils/helper'
+import { flattenArr, objToArr, timestampToString } from './utils/helper'
 import fileHelper from './utils/fileHelper'
 
 
@@ -42,12 +42,14 @@ const getAutoSync = () => ['accessKey', 'secretKey', 'bucketName', 'enableAutoSy
 const saveFilesToStore = (files) => {
   //数组方便处理
   const filesStoreObj = objToArr(files).reduce((result, file) => {
-    const { id, path, title, createdAt } = file
+    const { id, path, title, createdAt, isSynced, updateAt } = file
     result[id] = {
       id,
       path,
       title,
-      createdAt
+      createdAt,
+      isSynced,
+      updateAt
     }
     return result
   }, {})
@@ -61,7 +63,7 @@ function App() {
 
   //文件数组
   const [files, setFiles] = useState(fileStore.get('files') || {})
-  
+
   //当前被激活文件
   const [activeFileID, setActiveFileID] = useState("")
   //打开文件（数组）
@@ -76,7 +78,7 @@ function App() {
 
   //转回数组
   const filesArr = objToArr(files)
- 
+
 
 
   //通过openedFileIds筛选files数组
@@ -171,7 +173,7 @@ function App() {
   const updateFileName = (id, title, isNew) => {
     const newPath = isNew ? join(savedLocation, `${title}.md`) : join(dirname(files[id].path), `${title}.md`)
     const modifiedFile = { ...files[id], title, isNew: false, path: newPath }
-    console.log(newPath,modifiedFile)
+
     const newFiles = { ...files, [id]: modifiedFile }
     if (isNew) {
       const sameTitle = filesArr.filter(item => item.title == title)
@@ -179,13 +181,13 @@ function App() {
         const sameNameFile = { ...files[id], title, isNew: true, path: newPath, sameName: true }
         setFiles({ ...files, [id]: sameNameFile })
       } else {
-        console.log('开始创建')
+
         fileHelper.writeFile(newPath, files[id].body).then(() => {
-          console.log(newFiles,"1111")
+
           setFiles(newFiles)
           saveFilesToStore(newFiles)
-        }).catch(err=>{
-          console.log(err,"123")
+        }).catch(err => {
+          console.log(err, "123")
         })
       }
     } else {
@@ -230,15 +232,14 @@ function App() {
     const { path, body, title } = activeFile
     console.log(path, body, title)
     fileHelper.writeFile(path, body).then(() => {
-      console.log(path, body, title)
+
       setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id
 
       ))
+      if (getAutoSync()) {
+        ipcRenderer.send('upload-file', { key: `${title}.md`, path })
 
-      // if (getAutoSync()) {
-      //   ipcRenderer('upload-file', {key:`${title}.md`,path})
-
-      // }
+      }
     })
   }
   //删除不存在文件
@@ -291,11 +292,21 @@ function App() {
       }
     })
   }
+  //文件云保存后回调
+  const activeFileUploaded = () => {
+    const { id } = activeFile
+    console.log(id)
+    const modifiedFile = { ...files[id], isSynced: true, updateAt: new Date().getTime() }
+    const newFiles = { ...files, [id]: modifiedFile }
+    setFiles(newFiles)
+    saveFilesToStore(newFiles)
+  }
 
   useIpcRenderer({
     'create-new-file': createNewFile,
     'import-file': importFiles,
-    'save-edit-file': saveCurrentFile
+    'save-edit-file': saveCurrentFile,
+    'active-file-uploaded': activeFileUploaded
   })
 
 
@@ -356,8 +367,10 @@ function App() {
                     options={{
                       minHeight: '456px'
                     }}></SimpleMDE>
-
                 </>
+              }
+              {activeFile.isSynced &&
+                <span className="sync-status">已同步，上次同步时间{timestampToString(activeFile.updateAt)}</span>
               }
 
 

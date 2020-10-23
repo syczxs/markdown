@@ -34,5 +34,16 @@
   width: 75%;
   background-color: rgb(245,245,245);
 }
+.sync-status{
+  font-size: 12px;
+  color:#959694;
+ 
+  bottom: 12px;
+  left:10px
+
+}
+.CodeMirror-scroll{
+  height: 520px !important;
+}
 
 

@@ -17,9 +17,9 @@ let mainWindow, settingsWindow
 //实例化七牛类
 const createManager = () => {
   const accessKey = settingsStore.get('accessKey')
-  const secretKey = settingsStore.get('screctKey')
+  const secretKey = settingsStore.get('secretKey')
   const bucketName = settingsStore.get('bucketName')
-  return new  QiniuManager(accessKey,secretKey,bucketName)
+  return new QiniuManager(accessKey, secretKey, bucketName)
 }
 
 app.on('ready', () => {
@@ -77,12 +77,13 @@ app.on('ready', () => {
     }
   })
   //点击保存后，上传到七牛云
-  ipcMain.on('upload-file',(event,data)=>{
-    const manager=createManager()
-    manager.uploadFile(data.key,data.path).then(res=>{
-      console.log("上传成功",res)
-    }).catch(err=>{
-      dialog.showErrorBox("同步失败","请检查七牛云参数是否正确")
+  ipcMain.on('upload-file', (event, data) => {
+    const manager = createManager()
+    manager.uploadFile(data.key, data.path).then(data => {
+      console.log('上传成功', data)
+      mainWindow.webContents.send('active-file-uploaded')
+    }).catch(() => {
+      dialog.showErrorBox('同步失败', '请检查七牛云参数是否正确')
     })
   })
 
