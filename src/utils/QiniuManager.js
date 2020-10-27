@@ -46,12 +46,18 @@ class QiniuManager {
 
         })
 
-    }
+    }buck
     getBucketDomain() {
         const reqURL = `http://api.qiniu.com/v6/domain/list?tbl=${this.bucket}`
         const digest = qiniu.util.generateAccessToken(this.mac, reqURL)
         return new Promise((resolve, reject) => {
             qiniu.rpc.postWithoutForm(reqURL, digest, this._handleCallBack(resolve, reject))
+        })
+    }
+
+    getStat(key){
+        return new Promise((resolve,reject)=>{
+            this.bucket.stat(this.bucket,key,this._handleCallBack(resolve,reject))
         })
     }
     generateDownloadLink(key) {

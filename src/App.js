@@ -42,14 +42,14 @@ const getAutoSync = () => ['accessKey', 'secretKey', 'bucketName', 'enableAutoSy
 const saveFilesToStore = (files) => {
   //数组方便处理
   const filesStoreObj = objToArr(files).reduce((result, file) => {
-    const { id, path, title, createdAt, isSynced, updateAt } = file
+    const { id, path, title, createdAt, isSynced, updatedAt } = file
     result[id] = {
       id,
       path,
       title,
       createdAt,
       isSynced,
-      updateAt
+      updatedAt
     }
     return result
   }, {})
@@ -100,15 +100,22 @@ function App() {
     setActiveFileID(fileID)
     //打开文件内容
     const currentFile = files[fileID]
+    const { id, title, path, isLoaded } = currentFile
     console.log(currentFile)
     if (!currentFile.isLoaded) {
-      fileHelper.readFile(currentFile.path).then(value => {
-        const newFile = { ...files[fileID], body: value, isLoaded: true }
-        setFiles({ ...files, [fileID]: newFile })
-      }).catch(err => {
-        const newFile = { ...files[fileID], isLoaded: true, err: true }
-        setFiles({ ...files, [fileID]: newFile })
-      })
+      if (getAutoSync()) {
+        ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
+      } else {
+        fileHelper.readFile(currentFile.path).then(value => {
+          const newFile = { ...files[fileID], body: value, isLoaded: true }
+          setFiles({ ...files, [fileID]: newFile })
+        }).catch(err => {
+          const newFile = { ...files[fileID], isLoaded: true, err: true }
+          setFiles({ ...files, [fileID]: newFile })
+        })
+
+      }
+
 
     }
 
@@ -296,17 +303,36 @@ function App() {
   const activeFileUploaded = () => {
     const { id } = activeFile
     console.log(id)
-    const modifiedFile = { ...files[id], isSynced: true, updateAt: new Date().getTime() }
+    const modifiedFile = { ...files[id], isSynced: true, updatedAt: new Date().getTime() }
     const newFiles = { ...files, [id]: modifiedFile }
     setFiles(newFiles)
     saveFilesToStore(newFiles)
   }
+  //云文件对比后回调
+  const activeFileDownloaded = (event, message) => {
+    const currentFile = files[message.id]
+    const { id, path } = currentFile
+    fileHelper.readFile(path).then(value=>{
+      let newFile
+      if(message.status==='download-succes'){
+        newFile={...files[id],body:value,isLoad:true,isSynced:true,updatedAt:new Date().getTime()}
+      }else{
+        newFile={...files[id],body:value,isLoad:true}
+      }
+      const newFiles={...files,[id]:newFile}
+      setFiles(newFiles)
+      saveFilesToStore(newFiles)
+    })
+
+  }
+
 
   useIpcRenderer({
     'create-new-file': createNewFile,
     'import-file': importFiles,
     'save-edit-file': saveCurrentFile,
-    'active-file-uploaded': activeFileUploaded
+    'active-file-uploaded': activeFileUploaded,
+    'file-downloaded': activeFileDownloaded
   })
 
 
