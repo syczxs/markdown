@@ -310,6 +310,7 @@ function App() {
   }
   //云文件对比后回调
   const activeFileDownloaded = (event, message) => {
+    console.log("1")
     const currentFile = files[message.id]
     const { id, path } = currentFile
     fileHelper.readFile(path).then(value=>{

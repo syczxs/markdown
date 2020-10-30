@@ -89,6 +89,7 @@ app.on('ready', () => {
   })
   //打开文件前，对比云文件
   ipcMain.on('download', (event, data) => {
+    console.log("1")
     const manager = createManager()
     const filesObj = fileStore.get('files')
     const { key, path, id } = data
