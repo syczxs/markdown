@@ -102,7 +102,8 @@ function App() {
     const currentFile = files[fileID]
     const { id, title, path, isLoaded } = currentFile
     console.log(currentFile)
-    if (!currentFile.isLoaded) {
+    if (!isLoaded) {
+      console.log("1")
       if (getAutoSync()) {
         ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
       } else {
@@ -133,6 +134,9 @@ function App() {
   const tabClose = (id) => {
     const tabsWithout = openedFileIDs.filter(fileID => fileID !== id)
     setOpenedFileIDs(tabsWithout)
+    console.log(files[id])
+    const newFile={...files[id],isLoaded:false}
+    setFiles({...files,[id]:newFile})
     //关闭窗口后，将转换编辑器内容编辑器
     if (tabsWithout.length > 0) {
       setActiveFileID(tabsWithout[0])
@@ -310,21 +314,20 @@ function App() {
   }
   //云文件对比后回调
   const activeFileDownloaded = (event, message) => {
-    console.log("1")
+    console.log(message.status)
     const currentFile = files[message.id]
     const { id, path } = currentFile
-    fileHelper.readFile(path).then(value=>{
+    fileHelper.readFile(path).then(value => {
       let newFile
-      if(message.status==='download-succes'){
-        newFile={...files[id],body:value,isLoad:true,isSynced:true,updatedAt:new Date().getTime()}
-      }else{
-        newFile={...files[id],body:value,isLoad:true}
+      if (message.status === 'download-success') {
+        newFile = { ...files[id], body: value, isLoaded: true, isSynced: true, updatedAt: new Date().getTime() }
+      } else {
+        newFile = { ...files[id], body: value, isLoaded: true}
       }
-      const newFiles={...files,[id]:newFile}
+      const newFiles = { ...files, [id]: newFile }
       setFiles(newFiles)
       saveFilesToStore(newFiles)
     })
-
   }
 
 
@@ -397,7 +400,7 @@ function App() {
                 </>
               }
               {activeFile.isSynced &&
-                <span className="sync-status">已同步，上次同步时间{timestampToString(activeFile.updateAt)}</span>
+                <span className="sync-status">已同步，上次同步时间{timestampToString(activeFile.updatedAt)}</span>
               }
 
 

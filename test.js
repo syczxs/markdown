@@ -12,7 +12,7 @@ var secretKey = '7cdW9BvOS1S35SHLj_DjQ9UrpF-1s7oFI07_4eCn';
 
 var localFile = "C:/Users/麦律/Desktop/syc.md";
 
-var key = 'syc.md';
+var key = '11.md';
 const downloadPath=path.join('C:/Users/麦律/Desktop/',key)
 
 const manager = new QiniuManager(accessKey, secretKey, 'syc-markdown')

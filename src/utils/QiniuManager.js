@@ -57,7 +57,7 @@ class QiniuManager {
 
     getStat(key){
         return new Promise((resolve,reject)=>{
-            this.bucket.stat(this.bucket,key,this._handleCallBack(resolve,reject))
+            this.bucketManager.stat(this.bucket,key,this._handleCallBack(resolve,reject))
         })
     }
     generateDownloadLink(key) {

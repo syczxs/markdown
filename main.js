@@ -34,7 +34,7 @@ app.on('ready', () => {
 
   const urlLocation = isDev ? 'http://localhost:3000' : 'dummyurl'
   mainWindow = new AppWindow(mainWindowConfig, urlLocation)
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
   // mainWindow.loadURL(urlLocation)
 
   mainWindow.on('close', () => {
@@ -63,14 +63,14 @@ app.on('ready', () => {
   })
   //填写完七牛key后自动显示云保存项
   ipcMain.on('config-is-saved', () => {
-    // watch out menu items index for mac and windows
+    // 检测型号
     let qiniuMenu = process.platform === 'darwin' ? menu.items[3] : menu.items[2]
     const switchItems = (toggle) => {
       [1, 2, 3].forEach(number => {
         qiniuMenu.submenu.items[number].enabled = toggle
       })
     }
-    const qiniuIsConfiged = ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every(key => !!settingsStore.get(key))
+    const qiniuIsConfiged =  ['accessKey', 'secretKey', 'bucketName'].every(key => !!settingsStore.get(key))
     if (qiniuIsConfiged) {
       switchItems(true)
     } else {
@@ -88,14 +88,15 @@ app.on('ready', () => {
     })
   })
   //打开文件前，对比云文件
-  ipcMain.on('download', (event, data) => {
-    console.log("1")
+  ipcMain.on('download-file', (event, data) => {
+   
     const manager = createManager()
     const filesObj = fileStore.get('files')
     const { key, path, id } = data
     manager.getStat(data.key).then((resp) => {
       const serverUpdatedTime = Math.round(resp.putTime / 10000)
-      const localUpdatedTime = filesObj[id].updaedAt
+      const localUpdatedTime = filesObj[id].updatedAt
+      console.log(localUpdatedTime,serverUpdatedTime)
       if (serverUpdatedTime > localUpdatedTime || !localUpdatedTime){
         console.log('new file downloaded')
         manager.downloadFile(key,path).then(()=>{
