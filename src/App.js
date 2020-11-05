@@ -8,6 +8,8 @@ import SimpleMDE from 'react-simplemde-editor'
 import "easymde/dist/easymde.min.css"
 //引入uuid
 import uuidv4 from 'uuid/v4'
+//bootstrap
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 //js文件引用
 import { flattenArr, objToArr, timestampToString } from './utils/helper'
@@ -24,6 +26,8 @@ import FileList from './components/fileList/FileList'
 import ButtonBtn from './components/buttonBtn/ButtonBtn'
 //4右侧上部利表
 import TabList from './components/tabList/TabList'
+//加载中
+import Loader from './components/loader/Loader'
 
 
 //hook
@@ -72,6 +76,8 @@ function App() {
   const [unsavedFileIDs, setUnsavedFileIDs] = useState([])
   //搜索数组
   const [searchedFiles, setSearchedFiles] = useState([])
+  //加载中图标
+  const [isloading, setLoading] = useState(false)
 
   //electron中获取目录，document默认为电脑文档下
   const savedLocation = settingsStore.get('savedFileLocation') || remote.app.getPath('documents')
@@ -134,9 +140,9 @@ function App() {
   const tabClose = (id) => {
     const tabsWithout = openedFileIDs.filter(fileID => fileID !== id)
     setOpenedFileIDs(tabsWithout)
-    console.log(files[id])
-    const newFile={...files[id],isLoaded:false}
-    setFiles({...files,[id]:newFile})
+    // console.log(files[id])
+    const newFile = { ...files[id], isLoaded: false }
+    setFiles({ ...files, [id]: newFile })
     //关闭窗口后，将转换编辑器内容编辑器
     if (tabsWithout.length > 0) {
       setActiveFileID(tabsWithout[0])
@@ -169,10 +175,15 @@ function App() {
     } else {
       fileHelper.deleteFile(files[id].path).then(() => {
         const { [id]: value, ...afterDelete } = files
+        
+        tabClose(id)
         setFiles(afterDelete)
         saveFilesToStore(afterDelete)
         //关闭右侧窗口
-        tabClose(id)
+        
+        if (getAutoSync && files[id].isSynced) {
+          ipcRenderer.send('delete-file', `${files[id].title}.md`)
+        }
       })
 
     }
@@ -198,14 +209,16 @@ function App() {
           setFiles(newFiles)
           saveFilesToStore(newFiles)
         }).catch(err => {
-          console.log(err, "123")
+        
         })
       }
     } else {
       fileHelper.renameFile(files[id].path, newPath).then(() => {
-        console.log('222')
         setFiles(newFiles)
         saveFilesToStore(newFiles)
+        if ( getAutoSync && files[id].isSynced) {
+          ipcRenderer.send('rename-file', { oldName: files[id].title, newName: title })
+        }
       })
 
     }
@@ -322,12 +335,26 @@ function App() {
       if (message.status === 'download-success') {
         newFile = { ...files[id], body: value, isLoaded: true, isSynced: true, updatedAt: new Date().getTime() }
       } else {
-        newFile = { ...files[id], body: value, isLoaded: true}
+        newFile = { ...files[id], body: value, isLoaded: true }
       }
       const newFiles = { ...files, [id]: newFile }
       setFiles(newFiles)
       saveFilesToStore(newFiles)
     })
+  }
+  //上传所有文件
+  const filesUploaded = () => {
+    const newFiles = objToArr(files).reduce((result, file) => {
+      const currentTime = new Date().getTime()
+      result[file.id] = {
+        ...files[file.id],
+        isSynced: true,
+        updatedAt: currentTime
+      }
+      return result
+    }, {})
+    setFiles(newFiles)
+    saveFilesToStore(newFiles)
   }
 
 
@@ -336,12 +363,19 @@ function App() {
     'import-file': importFiles,
     'save-edit-file': saveCurrentFile,
     'active-file-uploaded': activeFileUploaded,
-    'file-downloaded': activeFileDownloaded
+    'file-downloaded': activeFileDownloaded,
+    'files-uploaded': filesUploaded,
+    'loading-status': (message, status) => { setLoading(status) }
   })
 
 
   return (
     <div className="App">
+      {
+        isloading &&
+        <Loader></Loader>
+      }
+
       <div className="body">
         <div className="body-left">
           <FileSearch

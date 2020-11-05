@@ -40,13 +40,33 @@ class QiniuManager {
 
     }
 
-    deletFile(key) {
+    deleteFile(key) {
         return new Promise((resolve, reject) => {
             this.bucketManager.delete(this.bucket, key, this._handleCallBack(resolve, reject));
 
         })
 
-    }buck
+    }
+    renameFile(oldKey, newKey) {
+        const options = {
+          force: true
+        }
+        return new Promise((resolve, reject) => {
+          this.bucketManager.move(this.bucket, oldKey, this.bucket, newKey, options, this._handleCallBack(resolve, reject))
+        })
+      }
+    getFileList(prefix = ''){
+        const options = {
+            limit: 10,
+            prefix,
+          }
+          return new Promise((resolve,reject)=>{
+            bucketManager.listPrefix(bucket, options, this._handleCallBack(resolve, reject) )
+
+          })
+         
+          
+    }
     getBucketDomain() {
         const reqURL = `http://api.qiniu.com/v6/domain/list?tbl=${this.bucket}`
         const digest = qiniu.util.generateAccessToken(this.mac, reqURL)
