@@ -91,6 +91,7 @@ let template = [{
     label: '从云端下载到本地',
     enabled: qiniuIsConfiged,
     click: () => {
+      ipcMain.emit('download-from-qiniu')
       
     }
   }]

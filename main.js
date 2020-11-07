@@ -12,7 +12,7 @@ const fileStore = new Store({ name: 'Files Data' })
 
 
 const QiniuManager = require('./src/utils/QiniuManager')
-const { promises } = require('dns')
+
 
 let mainWindow, settingsWindow
 
@@ -171,6 +171,23 @@ app.on('ready', () => {
         console.log(err)
         dialog.showErrorBox('云端重命名失败', '请检查七牛云参数是否正确',err)
       })
+    
+  })
+  //下载到本地
+  ipcMain.on('download-from-qiniu',()=>{
+    const manager = createManager()
+    manager.getFileList().then(items=>{
+      
+      const ownloadPromiseArr=Object.keys(items).filter(item=>{
+        
+      })
+      // const localfiles=Object.keys(fileStore.get('files'))
+      console.log(serverFiles,localfiles)
+      // const downloadPromiseArr =items.filter(item=>{
+      //   console.log(item)
+      // })
+
+    })
     
   })
 
