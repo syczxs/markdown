@@ -61,7 +61,7 @@ class QiniuManager {
             prefix,
           }
           return new Promise((resolve,reject)=>{
-            bucketManager.listPrefix(bucket, options, this._handleCallBack(resolve, reject) )
+            this.bucketManager.listPrefix(this.bucket, options, this._handleCallBack(resolve, reject) )
 
           })
          
