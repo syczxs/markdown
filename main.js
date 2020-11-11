@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const isDev = require('electron-is-dev')
 
 const path = require('path')
+const uuidv4 = require('uuid/v4')
 
 const menuTemplate = require('./src/menuTemplate')
 const AppWindow = require('./src/AppWindow')
@@ -9,6 +10,7 @@ const AppWindow = require('./src/AppWindow')
 const Store = require('electron-store')
 const settingsStore = new Store({ name: 'Settings' })
 const fileStore = new Store({ name: 'Files Data' })
+const savedLocation = settingsStore.get('savedFileLocation') || app.getPath('documents')
 
 
 const QiniuManager = require('./src/utils/QiniuManager')
@@ -33,7 +35,7 @@ app.on('ready', () => {
   }
 
 
-  const urlLocation = isDev ? 'http://localhost:3000' : 'dummyurl'
+  const urlLocation = isDev ? 'http://localhost:3000' : `file://${path.join(__dirname,'./build/index.html')}`
   mainWindow = new AppWindow(mainWindowConfig, urlLocation)
   // mainWindow.webContents.openDevTools();
   // mainWindow.loadURL(urlLocation)
@@ -176,19 +178,71 @@ app.on('ready', () => {
   //下载到本地
   ipcMain.on('download-from-qiniu',()=>{
     const manager = createManager()
-    manager.getFileList().then(items=>{
-      
-      const ownloadPromiseArr=Object.keys(items).filter(item=>{
-        
-      })
-      // const localfiles=Object.keys(fileStore.get('files'))
-      console.log(serverFiles,localfiles)
-      // const downloadPromiseArr =items.filter(item=>{
-      //   console.log(item)
-      // })
+    mainWindow.webContents.send('loading-status',true)
+      const localFilesObj = fileStore.get('files') || {}
+      let options  = {
+        buttons: ["是", "取消"],
+        message: "从七牛云下载所有文件，会覆盖本地同名文件，您是否要继续？"
+      }
+      dialog.showMessageBox(options,response=>{
+        if(response==0){
+          let fileList = []
+          mainWindow.webContents.send('request-loading')
+          manager.getFileList().then(res=>{
+            return res.items
+          }).then(items=>{
+            fileList=items
+            const downloadPromiseArr = items.map(item => {
+              return manager.downloadFile(item.key, path.join(savedLocation, item.key))
+            })
+            return Promise.all(downloadPromiseArr)
+          }).then(result=>{
+            dialog.showMessageBox({
+              type: 'info',
+              title: `成功下载了${result.length}个文件`,
+              message: `成功下载了${result.length}个文件`,
+            })
+            const finalFilesObj=fileList.reduce((newFilesObj,qiniuFile)=>{
+              const keyExisted = Object.keys(localFilesObj).find(key => `${localFilesObj[key].title}.md` === qiniuFile.key)
+              console.log(keyExisted)
+              const updatedTime = Math.round(qiniuFile.putTime / 10000)
+              const newPath = path.join(savedLocation, qiniuFile.key)
+              if(keyExisted){
+                const newFileItem = {
+                  ...localFilesObj[keyExisted],
+                  path: newPath,
+                  updatedAt: updatedTime,
+                }
+                return {
+                  ...newFilesObj, [keyExisted]: newFileItem
+                }
+              }else{
+                const newID = uuidv4()
+                const newFileItem = {
+                  id: newID,
+                  title: path.basename(qiniuFile.key, '.md'),
+                  path: newPath,
+                  createdAt: updatedTime,
+                  updatedAt: updatedTime,
+                  isSynced: true,
+                }
+                return {
+                  ...newFilesObj, [newID]: newFileItem
+                }
+              }
+            },{...localFilesObj})
+            fileStore.set('files', finalFilesObj)          
+          }).catch((err) => {
+            dialog.showErrorBox('下载失败', '请检查七牛云参数是否正确')
+            console.log(err)
+          }).finally(() => {
+            mainWindow.webContents.send('loading-status',false)
+          })     
+        }
 
-    })
-    
+      })
+      
+   
   })
 
 
