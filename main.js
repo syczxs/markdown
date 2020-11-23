@@ -35,7 +35,7 @@ app.on('ready', () => {
   }
 
 
-  const urlLocation = isDev ? 'http://localhost:3000' : `file://${path.join(__dirname,'./build/index.html')}`
+  const urlLocation = isDev ? 'http://localhost:3000' : `file://${path.join(__dirname,'./index.html')}`
   mainWindow = new AppWindow(mainWindowConfig, urlLocation)
   // mainWindow.webContents.openDevTools();
   // mainWindow.loadURL(urlLocation)
