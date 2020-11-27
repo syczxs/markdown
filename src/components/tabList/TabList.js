@@ -1,5 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import close from '../../assets/pic/x.png'
+import unsave from '../../assets/pic/unsave.png'
 //类名插件
 import classNames from 'classnames'
 import './TabList.css'
@@ -14,17 +16,25 @@ const TabList = ({ files, activeId, unsaveIds, onTabClick, onCloseTab }) => {
                     const fClassName = classNames({
                         "list-item": true,
                         'active': file.id === activeId,
-                        'withUnsaved':withUnsavedMark
+                        'withUnsaved': withUnsavedMark
                     })
                     return (
                         <div className={fClassName}
                             key={file.id}
                             onClick={(e) => { e.preventDefault(); onTabClick(file.id) }}>
-                            <span>{file.title}</span>
-                            <span className="close"
-                                onClick={(e) => { e.stopPropagation(); onCloseTab(file.id) }}>关闭</span>
+                            <span>{
+                                file.title.length < 5 && file.title
+                            }{
+                                    file.title.length > 5 && file.title.substr(0, 3) + '...'
+                                }</span>
+                            <img className="close"
+                                onClick={(e) => { e.stopPropagation(); onCloseTab(file.id) }} src={close}>
+                            
+                            </img>
                             {
-                                withUnsavedMark && <span className="unasve">未保存</span>
+                                withUnsavedMark && <div className="unasve">
+                                    <img className="unsave-pic" src={unsave}></img>
+                                </div>
                             }
                         </div>
                     )

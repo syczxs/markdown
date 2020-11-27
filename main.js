@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const isDev = require('electron-is-dev')
+// const {autoUpdater}=require('electron-updater')
 
 const path = require('path')
 const uuidv4 = require('uuid/v4')
@@ -27,6 +28,29 @@ const createManager = () => {
 }
 
 app.on('ready', () => {
+  // autoUpdater.autoDownload = false
+  // autoUpdater.checkForUpdates()
+  // autoUpdater.on('error', (error) => {
+  //   dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString())
+  // })
+  // autoUpdater.on('update-available', () => {
+  //   dialog.showMessageBox({
+  //     type: 'info',
+  //     title: '应用有新的版本',
+  //     message: '发现新版本，是否现在更新?',
+  //     buttons: ['是', '否']
+  //   }, (buttonIndex) => {
+  //     if (buttonIndex === 0) {
+  //       autoUpdater.downloadUpdate()
+  //     }
+  //   })
+  // })
+  // autoUpdater.on('update-not-available', () => {
+  //   dialog.showMessageBox({
+  //     title: '没有新版本',
+  //     message: '当前已经是最新版本'
+  //   })
+  // })
 
   const mainWindowConfig = {
     width: 1440,
@@ -93,35 +117,31 @@ app.on('ready', () => {
   //打开文件前，对比云文件
   ipcMain.on('download-file', (event, data) => {
     const manager = createManager()
-    mainWindow.webContents.send('loading-status',true)
+ 
     const filesObj = fileStore.get('files')
     const { key, path, id } = data
     manager.getStat(data.key).then((resp) => {
       const serverUpdatedTime = Math.round(resp.putTime / 10000)
       const localUpdatedTime = filesObj[id].updatedAt
       console.log(localUpdatedTime,serverUpdatedTime)
-      if (serverUpdatedTime > localUpdatedTime || !localUpdatedTime){
+      if (serverUpdatedTime-localUpdatedTime>1000 || !localUpdatedTime){
         console.log('new file downloaded')
         manager.downloadFile(key,path).then(()=>{
           mainWindow.webContents.send('file-downloaded',{ status: 'download-success',id })
-          mainWindow.webContents.send('loading-status',false)
-         
+           
+        }).catch((err)=>{
+          console.log(err)
         })
       }else{
         console.log('no new file')
         mainWindow.webContents.send('file-downloaded',{ status: 'no-new-file',id })
-        mainWindow.webContents.send('loading-status',false)
-        
-
-        
+   
       }
 
     }, (error) => {
-      console.log(error)
+      console.log(error,1111)
       if (error.statusCode === 612) {
-        mainWindow.webContents.send('file-downloaded', { status: 'no-file' ,id})
-        mainWindow.webContents.send('loading-status',false)
-       
+        mainWindow.webContents.send('file-downloaded', { status: 'no-file' ,id}) 
       }
     })
   })

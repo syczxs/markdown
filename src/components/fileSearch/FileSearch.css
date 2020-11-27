@@ -4,13 +4,39 @@
     display: flex;
     align-items: center;
     
+    
 }
 .box2{
     width:100%;
     display: flex;
     justify-content: space-around;
+    align-items: center;
+    font-weight: bold;
 }
-.input{
-    padding-left: 10px;
+.pic-box{
+    width:25px;
+    height:25px;
+    background-color:rgb(219,217,216);
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.pic{
+    width:60%;
+    height: 60%;
+    
+}
+input{
+    height:25px;
+    /* background-color: rgb(219,217,216); */
+    border:  1px reb(225,225,225) solid;
+    outline: none;
+    display: flex;
+    align-items: center;
 
 }
+input::-webkit-input-placeholder{
+    color:#585c89;
+    font-size: 14px;
+  }

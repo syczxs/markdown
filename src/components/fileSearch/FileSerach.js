@@ -5,6 +5,8 @@ import './FileSearch.css'
 import useKeyPress from '../../hooks/useKeyPress'
 //监听主进程回调
 import useIpcRenderer from '../../hooks/useIpcRenderer'
+import pic from '../../assets/pic/select.png'
+import pic2 from '../../assets/pic/delet.png'
 
 
 //显示文字，搜索enter的回调方法
@@ -58,8 +60,10 @@ const FileSearch = ({ title, onFileSearch }) => {
         <>
           <div className="box2">
             <span>{title}</span>
-            <button type="button" onClick={() => { setInputActive(true) }}>搜索</button>
-
+            <div className="pic-box" onClick={() => { setInputActive(true) }}>
+              <img className="pic" src={pic}></img>
+            </div>
+          
           </div>
         </>
       }{
@@ -67,12 +71,18 @@ const FileSearch = ({ title, onFileSearch }) => {
         <>
           <div className="box2">
             <input
+            placeholder="按下enter确认搜索"
               value={value}
               ref={node}
-              onChange={(e) => { setValue(e.target.value) }}
+              onChange={(e) => { setValue(e.target.value);onFileSearch(value)}}
             ></input>
-            <button type="button"
-              onClick={closeSearch}>关闭</button>
+             {/* <div className="pic-box" onClick={()=>onFileSearch(value)}>
+              <img className="pic" src={pic}></img>
+            </div> */}
+            <div className="pic-box" onClick={closeSearch}>
+              <img className="pic" src={pic2}></img>
+            </div>
+           
           </div>
         </>
       }

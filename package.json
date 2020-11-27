@@ -1,6 +1,6 @@
 {
   "name": "markdown",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "main.js",
   "description": "Online Markdown Editor using Qiniu cloud service",
   "author": {
@@ -10,11 +10,8 @@
   "repository": "https://github.com/syczxs/markdown",
   "private": true,
   "dependencies": {
-    
     "bootstrap": "^4.3.1",
-   
     "electron-store": "^4.0.0"
-   
   },
   "scripts": {
     "start": "react-scripts start",
@@ -26,8 +23,8 @@
     "dev": "concurrently \"wait-on http://localhost:3000 && electron .\" \"cross-env BROWSER=none npm start\"",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "release":"electron-builder",
-    "prerelease":"npm run build && npm run buildMain",
+    "release": "cross-env GH_TOKEN=1b00b856700a44bece6b176e316373bd6d04869a electron-builder",
+    "prerelease": "npm run build && npm run buildMain",
     "prepack": "npm run build && npm run buildMain",
     "predist": "npm run build && npm run buildMain"
   },
@@ -37,23 +34,23 @@
   "homepage": "./",
   "build": {
     "appId": "syc-markdown",
-    "productName": "云文档",
+    "productName": "胖虎云文档",
     "copyright": "Copyright © 2020 ${author}",
     "files": [
       "build/**/*",
       "node_modules/**/*",
       "settings/**/*",
       "package.json"
-      
     ],
-    "extraMetadata":{
-      "main":"./build/main.js"
-
+    "extraMetadata": {
+      "main": "./build/main.js"
     },
     "directories": {
       "buildResources": "assets"
     },
-    "publish":["github"],
+    "publish": [
+      "github"
+    ],
     "extends": null,
     "mac": {
       "category": "public.app-category.productivity",
@@ -113,12 +110,17 @@
     "@fortawesome/free-brands-svg-icons": "^5.9.0",
     "@fortawesome/free-solid-svg-icons": "^5.9.0",
     "@fortawesome/react-fontawesome": "^0.1.4",
+    "axios": "^0.19.0",
     "classnames": "^2.2.6",
     "concurrently": "^4.1.1",
     "cross-env": "^5.2.0",
     "electron": "^5.0.6",
     "electron-builder": "^21.2.0",
+    "electron-is-dev": "^1.1.0",
+    "electron-store": "^4.0.0",
+    "electron-updater": "^4.1.2",
     "node-sass": "^4.12.0",
+    "qiniu": "^7.2.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",

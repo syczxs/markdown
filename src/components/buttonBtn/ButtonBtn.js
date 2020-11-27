@@ -1,14 +1,22 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import './ButtonBtn.css'
+import newIcon from '../../assets/pic/new.png'
+import updateIncon from '../../assets/pic/导入.png'
 
 const BottomBtn = ({ text, colorClass, icon, onBtnClick }) => (
   <button
     type="button"
-    className={`btn btn-block no-border ${colorClass}`}
+    className="footer-pic"
     onClick={onBtnClick}
   >
-   
-    {text}
+
+    { text == "新建" &&
+      <img src={newIcon}></img>
+    }{
+      text == "导入" &&
+      <img src={updateIncon}></img>
+    }
   </button>
 )
 

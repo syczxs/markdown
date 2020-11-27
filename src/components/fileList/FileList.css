@@ -2,11 +2,64 @@
     width:100%;
     height: calc(100% - 120px);
    
-
 }
-.list-item{
-    height: 60px;
+.list-box .list-item{
+    width: 100%;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    
+}
+.list-box .list-item .inner{
+    width:100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-around;
 }
+.list-item .title-pic{
+    width: 40px;
+    height: 40px;
+    margin-left: 20px;
+}
+.list-item .title-pic img{
+    width: 100%;
+    height: 100%;
+}
+.list-item .title-left{
+    height:60%;   
+    margin-left: 10px;
+}
+.list-item .title-left .text1{
+    display: block;
+    font-size: 20px;
+    line-height: 25px;
+}
+.list-item .title-left .text2{
+    display: block;
+    font-size: 11px;
+    color: rgb(153,153,153);
+
+}
+.list-item .title-right{
+    position: absolute;
+    text-align: right;
+    height: 70%;
+    right: 10px;
+    display: flex;
+    align-items: center;
+}
+.delet-pic{
+    position: absolute;
+    right: 10px;
+}
+.small-title{
+    font-size: 11px;
+    display: block;
+    margin-left: 10px;
+    
+}
+
+
+

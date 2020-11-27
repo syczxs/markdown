@@ -7,6 +7,11 @@ import useKeyPress from '../../hooks/useKeyPress'
 //监听右键菜单hook
 import useContextMenu from '../../hooks/useContextMenu'
 
+import word from '../../assets/pic/word.png'
+import delet from '../../assets/pic/delet.png'
+import update from '../../assets/pic/重命名.png'
+import { timestampToString } from '../../utils/helper'
+
 //使用node
 const { remote } = window.require('electron')
 const { Menu, MenuItem } = remote
@@ -72,7 +77,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
             click: () => {
                 const parentElement = getParentNode(clickedItem.current, 'list-item')
                 if (parentElement) {
-                    setEditStatus(parentElement.dataset.id); setValue(parentElement.dataset.title) 
+                    setEditStatus(parentElement.dataset.id); setValue(parentElement.dataset.title)
                 }
 
             }
@@ -88,7 +93,7 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
 
             }
         }
-    ], '.lists',[files])
+    ], '.lists', [files])
 
 
     //创建点击菜单
@@ -108,26 +113,48 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                         >
                             {(file.id !== editStatus && !file.isNew) &&
                                 <>
-                                    <span
-                                        onClick={() => { onFileClick(file.id) }}>{file.title}</span>
 
-                                    <button
-                                        onClick={() => { setEditStatus(file.id); setValue(file.title) }}>编辑</button>
-                                    <button
-                                        onClick={() => { onFileDelete(file.id) }}>删除</button>
+                                    <div className="title-pic" onClick={() => { onFileClick(file.id) }}> <img src={word}></img></div>
+                                    <div className="title-left">
+                                        <span className="text1"
+                                            onClick={() => { onFileClick(file.id) }}>{file.title}</span>
+                                        <span className="text2">上次打开：{timestampToString(file.updatedAt)}</span>
+                                    </div>
+                                    <div className="title-right">
+                                        <div className="pic-box"
+                                            onClick={() => { setEditStatus(file.id); setValue(file.title) }}>
+                                            <img className="pic" src={update}></img>
+                                        </div>
+                                        <div className="pic-box" style={{ marginLeft: '10px' }}
+                                            onClick={() => { onFileDelete(file.id) }}>
+                                            <img className="pic" src={delet}></img>
+                                        </div>
+
+                                    </div>
+
+
                                 </>
                             }
                             {((file.id === editStatus) || file.isNew) &&
                                 <>
+                                    <div className="title-pic" > <img src={word}></img></div>
+                                    <div>
                                     <input
                                         value={value}
+                                        style={{ marginLeft: '10px' }}
                                         placeholder="请输入文件名称"
                                         onChange={(e) => { setValue(e.target.value) }}
                                     ></input>
+                                    <span className="small-title">按下enter确认新建</span>
+                                    </div>
                                     {file.sameName &&
                                         <span>已有相同文件</span>}
-                                    <button type="button"
-                                        onClick={() => { closeSearch(file) }}>关闭</button>
+                                    <div className="pic-box delet-pic"
+                                        
+                                        onClick={() => { closeSearch(file) }}>
+                                        <img className="pic" src={delet}></img>
+                                    </div>
+
                                 </>
                             }
 

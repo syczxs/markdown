@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 // import 'bootstrap/dist/css/bootstrap.min.css'
+import nothing from './assets/pic/空.png' 
 
 //引入富文本编辑器
 import SimpleMDE from 'react-simplemde-editor'
@@ -227,13 +228,15 @@ function App() {
   }
   //根据文件名查找onFileSearch
   const fileSearch = (keyword) => {
+    
     if (!!keyword) {
       // filter out the new files based on the keyword
       const newFiles = filesArr.filter(file => file.title.includes(keyword))
+      
       setSearchedFiles(newFiles)
 
     } else {
-      setSearchedFiles({})
+      setSearchedFiles([])
     }
 
   }
@@ -397,7 +400,7 @@ function App() {
             </div>
             <div className="footer-item">
               <ButtonBtn
-                text="导入 "
+                text="导入"
                 onBtnClick={importFiles}
               ></ButtonBtn>
             </div>
@@ -405,7 +408,10 @@ function App() {
         </div>
         <div className="body-right">
           {
-            !activeFile && <div >未打开文件</div>
+            !activeFile && <div className="title-center">
+              <img className="nothing-pic" src={nothing}></img>
+              <span className="nothing-text">您还没有打开文件!</span>
+            </div>
           }{
             activeFile &&
             <>
