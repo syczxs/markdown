@@ -33,7 +33,7 @@ const TabList = ({ files, activeId, unsaveIds, onTabClick, onCloseTab }) => {
                             </img>
                             {
                                 withUnsavedMark && <div className="unasve">
-                                    <img className="unsave-pic" src={unsave}></img>
+                                    <span className="unsave-text" >未保存</span>
                                 </div>
                             }
                         </div>

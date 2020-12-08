@@ -118,7 +118,12 @@ const FileList = ({ files, onFileClick, onSaveEdit, onFileDelete }) => {
                                     <div className="title-left">
                                         <span className="text1"
                                             onClick={() => { onFileClick(file.id) }}>{file.title}</span>
-                                        <span className="text2">上次打开：{timestampToString(file.updatedAt)}</span>
+                                         {file.isSynced &&
+                                            <span className="text2">上次打开时间{timestampToString(file.updatedAt)}</span>
+                                        }{
+                                            !file.isSynced &&
+                                            <span className="text2">未同步</span>
+                                        }
                                     </div>
                                     <div className="title-right">
                                         <div className="pic-box"

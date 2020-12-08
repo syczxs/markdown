@@ -29,7 +29,7 @@ const createManager = () => {
 
 app.on('ready', () => {
   // autoUpdater.autoDownload = false
-  // autoUpdater.checkForUpdates()
+  // autoUpdater.checkForUpdatesAndNotify()
   // autoUpdater.on('error', (error) => {
   //   dialog.showErrorBox('Error: ', error == null ? "unknown" : (error.stack || error).toString())
   // })

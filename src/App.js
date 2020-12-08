@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 // import 'bootstrap/dist/css/bootstrap.min.css'
 import nothing from './assets/pic/空.png' 
+import bug from './assets/pic/错误.png'
 
 //引入富文本编辑器
 import SimpleMDE from 'react-simplemde-editor'
@@ -118,6 +119,7 @@ function App() {
           const newFile = { ...files[fileID], body: value, isLoaded: true }
           setFiles({ ...files, [fileID]: newFile })
         }).catch(err => {
+          console.log("文件不存在")
           const newFile = { ...files[fileID], isLoaded: true, err: true }
           setFiles({ ...files, [fileID]: newFile })
         })
@@ -272,10 +274,13 @@ function App() {
   //删除不存在文件
   const deleteErrFile = (id) => {
     const { [id]: value, ...afterDelete } = files
-    setFiles(afterDelete)
-    saveFilesToStore(afterDelete)
     //关闭右侧窗口
     tabClose(id)
+    setFiles(afterDelete)
+    saveFilesToStore(afterDelete)
+    
+    
+    
 
   }
   //导入文件
@@ -424,8 +429,13 @@ function App() {
               ></TabList>
               {activeFile.err &&
                 <>
+                <div className="err-boc">
+                  <div className="err-inner-box">
+                <img className="err-pic" src={bug}></img>
                   <div>文件不存在</div>
                   <button onClick={() => { deleteErrFile(activeFile.id) }}>确定</button>
+                  </div>
+                  </div>
                 </>
               }{
                 !activeFile.err &&
@@ -441,6 +451,9 @@ function App() {
               }
               {activeFile.isSynced &&
                 <span className="sync-status">已同步，上次同步时间{timestampToString(activeFile.updatedAt)}</span>
+              }{
+                !activeFile.isSynced &&
+                <span className="sync-status">未同步</span>
               }
 
 
